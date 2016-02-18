@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/MyHashMap.iml" filepath="$PROJECT_DIR$/MyHashMap.iml" />
+      <module fileurl="file://$PROJECT_DIR$/child-module/child-module.iml" filepath="$PROJECT_DIR$/child-module/child-module.iml" />
     </modules>
   </component>
 </project>

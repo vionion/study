@@ -1,8 +1,6 @@
-package tsybulko.testproject.myhashmaptests;
+package tsybulko.testproject.myhashmap;
 
 import org.junit.*;
-
-import tsybulko.testproject.myhashmap.MyHashMap;
 
 import static org.junit.Assert.*;
 
@@ -87,4 +85,8 @@ public class MyHashMapTest {
         assertTrue(initialCapacity < generalTestMap.getCapacity());
     }
 
+    @After
+    public void tearDown() throws Exception {
+        generalTestMap = new MyHashMap<String, String>();
+    }
 }
