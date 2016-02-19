@@ -2,7 +2,13 @@ package tsybulko.testproject.myhashmap;
 
 import tsybulko.testproject.myhashmap.entity.Entry;
 
-public class MyHashMap<K, V> {
+/**
+ * @author Vitalii Tsybulko
+ * @version 1.0
+ * @since 02/16/2016
+ */
+
+public class MyHashMap<K, V> implements IMap<K, V> {
 
     private int capacity;
     private float loadFactor;
@@ -35,102 +41,126 @@ public class MyHashMap<K, V> {
     }
 
     public void put(K key, V value) {
-        put(key, value, table);
-        size++;
-    }
-
-    private void put(K key, V value, Entry<K, V>[] destination) {
         int myHash = (key == null) ? 0 : getHash(key.hashCode());
         Entry<K, V> entry = new Entry<K, V>(key, value, myHash);
-        int index = (key == null) ? 0 : getIndex(myHash, destination.length);
-        if (destination[index] == null) {
-            destination[index] = entry;
+        int index = getIndex(myHash, table.length);
+        if (table[index] == null) {
+            table[index] = entry;
+        } else if (entry.getKey() == null) {
+            if (table[index].getKey() == null) {
+                entry.setNext(table[index].getNext());
+                table[index] = entry;
+            } else {
+                entry.setNext(table[index]);
+                table[index] = entry;
+            }
+        } else if (table[index].getKey() == null) {
+            if (table[index].isLastInQueue()) {
+                table[index].setNext(entry);
+            } else {
+                insertInQueue(table[index].getNext(), entry, table[index]);
+            }
+        } else if (table[index].getKey().equals(entry.getKey())) {
+            entry.setNext(table[index].getNext());
+            table[index] = entry;
         } else {
-            // in case of collision
-            insertInQueue(destination[index], entry);
+            insertInQueue(table[index], entry, null);
         }
         if ((size + 1.) / capacity > loadFactor) {
             rehash();
         }
+        size++;
     }
 
     public void clear() {
         for (int i = 0; i < table.length; i++) {
             table[i] = null;
         }
-        // is it normal to leave deadlocks? maybe yes
         size = 0;
     }
 
+    /**
+     * Function for enlarging {@link MyHashMap#table}, when {@link MyHashMap#loadFactor} is exceeded
+     */
     private void rehash() {
         capacity <<= 1;
         Entry<K, V>[] tableNew = new Entry[capacity];
-        Entry<K, V> insertingEntry;
-        for (int i = 0; i < capacity >> 1; i++) {
-            insertingEntry = table[i];
-            if (insertingEntry == null) {
+        for (int i = 0; i < table.length; i++) {
+            if (table[i] == null) {
                 continue;
             }
-            do {
-                put(insertingEntry.getKey(), insertingEntry.getValue(), tableNew);
-                insertingEntry = insertingEntry.getNext();
-            } while (insertingEntry != null);
+            int newIndex = getIndex(table[i].getHash(), capacity);
+            tableNew[newIndex] = table[i];
         }
         table = tableNew;
     }
 
+    /**
+     * Trivial method of this class for achieving hash code
+     * from key
+     *
+     * @param keyHash Just hashCode of inserted key
+     * @return int This returns hash, calculated by the internal rule.
+     */
     private int getHash(int keyHash) {
         return keyHash;
     }
 
+    /**
+     * Method for calculating basket index in {@link MyHashMap#table} for
+     * some hash of some inserted key
+     *
+     * @param myHash Hash of some inserted key
+     * @param length Length of table for inserting
+     * @return int This returns index of basket for inserting.
+     */
     private int getIndex(int myHash, int length) {
         return myHash & (length - 1);
     }
 
-    private void insertInQueue(Entry<K, V> queueUnit, Entry<K, V> entryToInsert) {
-        if (queueUnit.isLastInQueue()) {
-            queueUnit.setNext(entryToInsert);
+    /**
+     * Function for inserting entry for cases with collisions
+     *
+     * @param queueUnit     Entry under observation
+     * @param entryToInsert Entry which need to be inserted
+     * @param previousEntry Entry before {@param queueUnit}; can be null, if {@param queueUnit} is in the very beginning of queue
+     */
+    private void insertInQueue(Entry<K, V> queueUnit, Entry<K, V> entryToInsert, Entry<K, V> previousEntry) {
+        if (queueUnit.getKey() != null && queueUnit.getKey().equals(entryToInsert.getKey())) {
+            entryToInsert.setNext(queueUnit.getNext());
+            if (previousEntry != null) {
+                previousEntry.setNext(entryToInsert);
+            }
         } else {
-            insertInQueue(queueUnit.getNext(), entryToInsert);
+            if (queueUnit.isLastInQueue()) {
+                queueUnit.setNext(entryToInsert);
+            } else {
+                insertInQueue(queueUnit.getNext(), entryToInsert, queueUnit);
+            }
         }
-        //queueUnit.isLastInQueue() ? queueUnit.setNext(entryToInsert) : insertInQueue(queueUnit.getNext(), entryToInsert);
     }
 
+    /**
+     * Method for receiving Entry by its hash from queue; used in cases of collisions
+     *
+     * @param queueUnit Entry under observation
+     * @param myHash    Hash of seeking Entry
+     * @return V This returns value of seeking Entry.
+     */
     private V getValueFromQueue(Entry<K, V> queueUnit, int myHash) {
         return queueUnit.getHash() == myHash ? queueUnit.getValue() : getValueFromQueue(queueUnit.getNext(), myHash);
     }
 
-
     public int getCapacity() {
         return capacity;
-    }
-
-    public void setCapacity(int capacity) {
-        this.capacity = capacity;
     }
 
     public float getLoadFactor() {
         return loadFactor;
     }
 
-    public void setLoadFactor(float loadFactor) {
-        this.loadFactor = loadFactor;
-    }
-
-    public Entry<K, V>[] getTable() {
-        return table;
-    }
-
-    public void setTable(Entry<K, V>[] table) {
-        this.table = table;
-    }
-
     public int getSize() {
         return size;
-    }
-
-    public void setSize(int size) {
-        this.size = size;
     }
 
 }

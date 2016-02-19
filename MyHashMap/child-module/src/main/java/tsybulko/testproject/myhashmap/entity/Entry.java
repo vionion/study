@@ -1,8 +1,11 @@
 package tsybulko.testproject.myhashmap.entity;
 
 /**
- * Created by vtsybulko on 16.02.16.
+ * @author Vitalii Tsybulko
+ * @version 1.0
+ * @since 02/16/2016
  */
+
 public class Entry<K, V> {
 
     K key;

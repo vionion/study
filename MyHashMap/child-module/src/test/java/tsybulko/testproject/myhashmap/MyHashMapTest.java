@@ -1,11 +1,14 @@
 package tsybulko.testproject.myhashmap;
 
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 /**
- * Created by vtsybulko on 17.02.16.
+ * @author Vitalii Tsybulko
+ * @version 1.0
+ * @since 02/17/2016
  */
 public class MyHashMapTest {
 
@@ -31,15 +34,30 @@ public class MyHashMapTest {
     }
 
     @Test
-    public void testPut() throws Exception {
+    public void testPutNull() throws Exception {
         generalTestMap.put(null, "nullValue");
         assertSame("nullValue", generalTestMap.get(null));
         generalTestMap.put("test1key", "test1value");
+        generalTestMap.put(null, "nullValue2");
+        assertSame("nullValue2", generalTestMap.get(null));
+        generalTestMap.put("test1key", "test2value");
+        assertSame("test2value", generalTestMap.get("test1key"));
+    }
+
+    @Test
+    public void testPutNullAfterUsualInsert() throws Exception {
+        generalTestMap.put("test1key", "test1value");
+        generalTestMap.put(null, "nullValue");
+        assertSame("nullValue", generalTestMap.get(null));
+    }
+
+    @Test
+    public void testPut() throws Exception {
+        generalTestMap.put("test1key", "test1value");
         assertSame("test1value", generalTestMap.get("test1key"));
         generalTestMap.put("test4key", "test4value1");
-        // provoking collision, which happens `cause hash function of map is unperfect a bit
         generalTestMap.put("test4key", "test4value2");
-        assertSame("test4value1", generalTestMap.get("test4key"));
+        assertSame("test4value2", generalTestMap.get("test4key"));
     }
 
     @Test
@@ -85,8 +103,34 @@ public class MyHashMapTest {
         assertTrue(initialCapacity < generalTestMap.getCapacity());
     }
 
-    @After
-    public void tearDown() throws Exception {
-        generalTestMap = new MyHashMap<String, String>();
+    @Test
+    public void testWithUsualCollisions() throws Exception {
+        MyHashMap<MyObjectWithStrangeHash, String> specialTestMap = new MyHashMap<MyObjectWithStrangeHash, String>(20, 0.75f);
+        MyObjectWithStrangeHash firstInCollision = new MyObjectWithStrangeHash(16);
+        MyObjectWithStrangeHash secondInCollision = new MyObjectWithStrangeHash(20);
+        MyObjectWithStrangeHash thirdInCollision = new MyObjectWithStrangeHash(28);
+        MyObjectWithStrangeHash fourthInCollision = new MyObjectWithStrangeHash(48);
+        specialTestMap.put(firstInCollision, "firstInCollision");
+        specialTestMap.put(secondInCollision, "secondInCollision");
+        specialTestMap.put(thirdInCollision, "thirdInCollision");
+        specialTestMap.put(fourthInCollision, "fourthInCollision");
+        assertEquals(4, specialTestMap.getSize());
+        assertEquals("firstInCollision", specialTestMap.get(firstInCollision));
+        assertEquals("secondInCollision", specialTestMap.get(secondInCollision));
+        assertEquals("thirdInCollision", specialTestMap.get(thirdInCollision));
+        assertEquals("fourthInCollision", specialTestMap.get(fourthInCollision));
+    }
+
+    private class MyObjectWithStrangeHash {
+        int hash;
+
+        public MyObjectWithStrangeHash(int hash) {
+            this.hash = hash;
+        }
+
+        @Override
+        public int hashCode() {
+            return hash;
+        }
     }
 }

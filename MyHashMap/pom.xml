@@ -1,28 +1,33 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>my_hashmap_group</groupId>
-    <artifactId>my_hashmap_program</artifactId>
+    <groupId>my-hashmap-group</groupId>
+    <artifactId>my-hashmap-program</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
-    <name>My HashMap programm</name>
+    <name>My HashMap program</name>
 
     <modules>
         <module>child-module</module>
     </modules>
 
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.6</version>
-                <configuration>
-                    <descriptors>
-                        <descriptor>src/assembly/src.xml</descriptor>
-                    </descriptors>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    <properties>
+        <junit-version>4.8.1</junit-version>
+        <maven-compiler-version>2.3.2</maven-compiler-version>
+        <maven-clean-version>2.4.1</maven-clean-version>
+        <maven-surefire-version>2.10</maven-surefire-version>
+        <maven-install-version>2.3.1</maven-install-version>
+        <maven-deploy-version>2.7</maven-deploy-version>
+        <maven-site-version>3.0</maven-site-version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit-version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
 </project>
