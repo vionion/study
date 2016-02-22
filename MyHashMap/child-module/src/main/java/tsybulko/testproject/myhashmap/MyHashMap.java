@@ -44,25 +44,23 @@ public class MyHashMap<K, V> implements IMap<K, V> {
         int myHash = (key == null) ? 0 : getHash(key.hashCode());
         Entry<K, V> entry = new Entry<K, V>(key, value, myHash);
         int index = getIndex(myHash, table.length);
+        boolean nullOldEntryKey = table[index] == null || table[index].getKey() == null;
+        boolean nullNewEntryKey = entry.getKey() == null;
         if (table[index] == null) {
             table[index] = entry;
-        } else if (entry.getKey() == null) {
-            if (table[index].getKey() == null) {
-                entry.setNext(table[index].getNext());
-                table[index] = entry;
-            } else {
-                entry.setNext(table[index]);
-                table[index] = entry;
-            }
-        } else if (table[index].getKey() == null) {
+        } else if (nullNewEntryKey & nullOldEntryKey) {
+            replaceByNew(entry, index);
+        } else if (nullOldEntryKey) {
             if (table[index].isLastInQueue()) {
                 table[index].setNext(entry);
             } else {
                 insertInQueue(table[index].getNext(), entry, table[index]);
             }
-        } else if (table[index].getKey().equals(entry.getKey())) {
-            entry.setNext(table[index].getNext());
+        } else if (nullNewEntryKey) {
+            entry.setNext(table[index]);
             table[index] = entry;
+        } else if (table[index].getKey().equals(entry.getKey())) {
+            replaceByNew(entry, index);
         } else {
             insertInQueue(table[index], entry, null);
         }
@@ -70,6 +68,11 @@ public class MyHashMap<K, V> implements IMap<K, V> {
             rehash();
         }
         size++;
+    }
+
+    private void replaceByNew(Entry<K, V> newEntry, int oldEntryIndex) {
+        newEntry.setNext(table[oldEntryIndex].getNext());
+        table[oldEntryIndex] = newEntry;
     }
 
     public void clear() {
