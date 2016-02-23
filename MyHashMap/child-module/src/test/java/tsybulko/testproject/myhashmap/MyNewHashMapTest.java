@@ -10,25 +10,25 @@ import static org.junit.Assert.*;
  * @version 1.0
  * @since 02/17/2016
  */
-public class MyHashMapTest {
+public class MyNewHashMapTest {
 
-    private MyHashMap<String, String> generalTestMap;
+    private MyNewHashMap<String, String> generalTestMap;
 
     @Before
     public void setUp() throws Exception {
-        generalTestMap = new MyHashMap<String, String>();
+        generalTestMap = new MyNewHashMap<String, String>();
     }
 
     @Test
     public void testConstructorWithoutParams() throws Exception {
-        MyHashMap testMap = new MyHashMap();
+        MyNewHashMap testMap = new MyNewHashMap();
         assertEquals(16, testMap.getCapacity());
         assertEquals(0.75f, testMap.getLoadFactor(), 2);
     }
 
     @Test
     public void testConstructorWithParams() throws Exception {
-        MyHashMap testMap = new MyHashMap(20, 0.155151f);
+        MyNewHashMap testMap = new MyNewHashMap(20, 0.155151f);
         assertEquals(20, testMap.getCapacity());
         assertEquals(0.155151f, testMap.getLoadFactor(), 6);
     }
@@ -81,7 +81,7 @@ public class MyHashMapTest {
         int tableSize = generalTestMap.getSize();
         int minimalNeededToRehashEntityCount = (int) Math.ceil((float) generalTestMap.getCapacity() * generalTestMap.getLoadFactor()) + 1;
         for (int i = 0; i < minimalNeededToRehashEntityCount; i++) {
-            generalTestMap.put(String.valueOf((char) (97 + i)), "testRehashValue" + i);
+            generalTestMap.put(String.valueOf('a' + i), "testRehashValue" + i);
             tableSize++;
         }
         assertEquals(tableSize, generalTestMap.getSize());
@@ -91,21 +91,31 @@ public class MyHashMapTest {
 
     @Test
     public void testRehashWithCollisions() throws Exception {
-        int initialCapacity = generalTestMap.getCapacity();
-        int tableSize = generalTestMap.getSize();
+        MyNewHashMap<MyObjectWithStrangeHash, String> specialTestMap = new MyNewHashMap<MyObjectWithStrangeHash, String>();
+        int initialCapacity = specialTestMap.getCapacity();
+        int tableSize = specialTestMap.getSize();
         int minimalNeededToRehashEntityCount = (int) Math.ceil((float) generalTestMap.getCapacity() * generalTestMap.getLoadFactor()) + 1;
-        for (int i = 0; i < minimalNeededToRehashEntityCount; i++) {
-            generalTestMap.put("testRehashCollisionsKey", "testRehashValue" + i);
+        MyObjectWithStrangeHash firstInCollision = new MyObjectWithStrangeHash(16);
+        MyObjectWithStrangeHash secondInCollision = new MyObjectWithStrangeHash(20);
+        MyObjectWithStrangeHash thirdInCollision = new MyObjectWithStrangeHash(28);
+        MyObjectWithStrangeHash fourthInCollision = new MyObjectWithStrangeHash(48);
+        specialTestMap.put(firstInCollision, "firstInCollision");
+        specialTestMap.put(secondInCollision, "secondInCollision");
+        specialTestMap.put(thirdInCollision, "thirdInCollision");
+        specialTestMap.put(fourthInCollision, "fourthInCollision");
+        tableSize += 4;
+        for (int i = 0; i < minimalNeededToRehashEntityCount - 4; i++) {
+            specialTestMap.put(new MyObjectWithStrangeHash(i), "testRehashValue" + i);
             tableSize++;
         }
-        assertEquals(tableSize, generalTestMap.getSize());
+        assertEquals(tableSize, specialTestMap.getSize());
         assertEquals(tableSize, minimalNeededToRehashEntityCount);
-        assertTrue(initialCapacity < generalTestMap.getCapacity());
+        assertTrue(initialCapacity < specialTestMap.getCapacity());
     }
 
     @Test
     public void testWithUsualCollisions() throws Exception {
-        MyHashMap<MyObjectWithStrangeHash, String> specialTestMap = new MyHashMap<MyObjectWithStrangeHash, String>(20, 0.75f);
+        MyNewHashMap<MyObjectWithStrangeHash, String> specialTestMap = new MyNewHashMap<MyObjectWithStrangeHash, String>(20, 0.75f);
         MyObjectWithStrangeHash firstInCollision = new MyObjectWithStrangeHash(16);
         MyObjectWithStrangeHash secondInCollision = new MyObjectWithStrangeHash(20);
         MyObjectWithStrangeHash thirdInCollision = new MyObjectWithStrangeHash(28);

@@ -40,15 +40,17 @@ public class MyHashMap<K, V> implements IMap<K, V> {
         }
     }
 
-    public void put(K key, V value) {
+    public V put(K key, V value) {
         int myHash = (key == null) ? 0 : getHash(key.hashCode());
         Entry<K, V> entry = new Entry<K, V>(key, value, myHash);
         int index = getIndex(myHash, table.length);
         boolean nullOldEntryKey = table[index] == null || table[index].getKey() == null;
         boolean nullNewEntryKey = entry.getKey() == null;
+        Entry<K, V> oldEntry = null;
         if (table[index] == null) {
             table[index] = entry;
         } else if (nullNewEntryKey & nullOldEntryKey) {
+            oldEntry = table[index];
             replaceByNew(entry, index);
         } else if (nullOldEntryKey) {
             if (table[index].isLastInQueue()) {
@@ -61,6 +63,7 @@ public class MyHashMap<K, V> implements IMap<K, V> {
             table[index] = entry;
         } else if (table[index].getKey().equals(entry.getKey())) {
             replaceByNew(entry, index);
+            oldEntry = table[index];
         } else {
             insertInQueue(table[index], entry, null);
         }
@@ -68,6 +71,7 @@ public class MyHashMap<K, V> implements IMap<K, V> {
             rehash();
         }
         size++;
+        return oldEntry.getValue();
     }
 
     private void replaceByNew(Entry<K, V> newEntry, int oldEntryIndex) {
@@ -89,13 +93,18 @@ public class MyHashMap<K, V> implements IMap<K, V> {
         capacity <<= 1;
         Entry<K, V>[] tableNew = new Entry[capacity];
         for (int i = 0; i < table.length; i++) {
-            if (table[i] == null) {
-                continue;
-            }
-            int newIndex = getIndex(table[i].getHash(), capacity);
-            tableNew[newIndex] = table[i];
+            reassignEntries(table[i], tableNew);
         }
         table = tableNew;
+    }
+
+    private void reassignEntries(Entry<K, V> oldEntry, Entry<K, V>[] newTable) {
+        if (oldEntry == null) {
+            return;
+        }
+        int newIndex = getIndex(oldEntry.getHash(), capacity);
+        newTable[newIndex] = oldEntry;
+        reassignEntries(oldEntry.getNext(), newTable);
     }
 
     /**

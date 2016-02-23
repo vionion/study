@@ -36,7 +36,7 @@ public interface IMap<K, V> {
      * (A <tt>null</tt> return can also indicate that the map
      * previously associated <tt>null</tt> with <tt>key</tt>.)
      */
-    void put(K key, V value);
+    V put(K key, V value);
 
     /**
      * Removes all of the mappings from this map.

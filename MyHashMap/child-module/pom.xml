@@ -43,10 +43,6 @@
                         <goals>
                             <goal>compile</goal>
                         </goals>
-                        <configuration>
-                            <source>1.5</source>
-                            <target>1.5</target>
-                        </configuration>
                     </execution>
                     <execution>
                         <id>default-testCompile</id>
@@ -54,16 +50,8 @@
                         <goals>
                             <goal>testCompile</goal>
                         </goals>
-                        <configuration>
-                            <source>1.5</source>
-                            <target>1.5</target>
-                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
-                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
@@ -104,64 +92,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>${maven-deploy-version}</version>
-                <executions>
-                    <execution>
-                        <id>default-deploy</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>deploy</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-site-plugin</artifactId>
-                <version>${maven-site-version}</version>
-                <executions>
-                    <execution>
-                        <id>default-site</id>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>site</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>target/site</outputDirectory>
-                            <reportPlugins>
-                                <reportPlugin>
-                                    <groupId>org.apache.maven.plugins</groupId>
-                                    <artifactId>maven-project-info-reports-plugin</artifactId>
-                                </reportPlugin>
-                            </reportPlugins>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>default-deploy</id>
-                        <phase>site-deploy</phase>
-                        <goals>
-                            <goal>deploy</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>target/site</outputDirectory>
-                        </configuration>
-                    </execution>
-                </executions>
-                <configuration>
-                    <outputDirectory>target/site</outputDirectory>
-                    <reportPlugins>
-                        <reportPlugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-project-info-reports-plugin</artifactId>
-                        </reportPlugin>
-                    </reportPlugins>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
-
-    <reporting>
-        <outputDirectory>target/site</outputDirectory>
-    </reporting>
 </project>
