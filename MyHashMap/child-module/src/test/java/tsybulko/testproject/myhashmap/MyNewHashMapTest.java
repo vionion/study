@@ -2,6 +2,11 @@ package tsybulko.testproject.myhashmap;
 
 import org.junit.Before;
 import org.junit.Test;
+import tsybulko.testproject.myhashmap.entity.Entry;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -142,5 +147,69 @@ public class MyNewHashMapTest {
         public int hashCode() {
             return hash;
         }
+    }
+
+    @Test
+    public void testLoadMyHashMap() throws Exception {
+        System.out.println("~~~~~~MyHashMapStart~~~~~~");
+        StringBuilder key = new StringBuilder();
+        StringBuilder value = new StringBuilder();
+        long timeBefore = System.currentTimeMillis();
+        int i = 0;
+        while (i < 1000000) {
+            key.append("loadKey").append(i);
+            value.append("loadValue").append(i);
+            generalTestMap.put(key.toString(), value.toString());
+            key.setLength(0);
+            value.setLength(0);
+            i++;
+        }
+        long timeAfter = System.currentTimeMillis();
+        System.out.println("Time required for table inflation is " + (timeAfter - timeBefore) + " ms");
+        System.out.println("Map capacity after data is inserted is " + generalTestMap.getCapacity());
+        Field f = generalTestMap.getClass().getDeclaredField("table");
+        f.setAccessible(true);
+        Entry[] tableVal = Entry[].class.cast(f.get(generalTestMap));
+        int num = 0;
+        for (Entry entry : Arrays.asList(tableVal)) {
+            if (entry == null) {
+                num++;
+            }
+        }
+        System.out.println("Number of empty buckets after data is inserted is " + num);
+        System.out.println("~~~~~MyHashMapEnd~~~~~~");
+    }
+
+    @Test
+    public void testLoadHashMap() throws Exception {
+        System.out.println("~~~~~HashMapStart~~~~~~");
+        HashMap<String, String> map = new HashMap<String, String>();
+        StringBuilder key = new StringBuilder();
+        StringBuilder value = new StringBuilder();
+        long timeBefore = System.currentTimeMillis();
+        int i = 0;
+        while (i < 1000000) {
+            key.append("loadKey").append(i);
+            value.append("loadValue").append(i);
+            map.put(key.toString(), value.toString());
+            key.setLength(0);
+            value.setLength(0);
+            i++;
+        }
+        long timeAfter = System.currentTimeMillis();
+        System.out.println("Time required for table inflation is " + (timeAfter - timeBefore) + " ms");
+        Field f = map.getClass().getDeclaredField("table");
+        f.setAccessible(true);
+        Object[] table = (Object[]) f.get(map);
+
+        System.out.println("HashMap capacity after data is inserted is " + table.length);
+        int num = 0;
+        for (Object entry : table) {
+            if (entry == null) {
+                num++;
+            }
+        }
+        System.out.println("Number of empty buckets after data is inserted is " + num);
+        System.out.println("~~~~~HashMapEnd~~~~~~");
     }
 }
