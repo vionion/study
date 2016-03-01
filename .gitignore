@@ -1,6 +1,6 @@
 *.iml
 *.class
 .idea/
-*/out/
-*/target/
+**/out/
+**/target/
 .gitignore~
