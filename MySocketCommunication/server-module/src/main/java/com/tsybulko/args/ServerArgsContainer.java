@@ -2,6 +2,8 @@ package com.tsybulko.args;
 
 import org.apache.log4j.Logger;
 
+import java.util.HashMap;
+
 /**
  * @author Vitalii Tsybulko
  * @version 1.0
@@ -11,9 +13,8 @@ public class ServerArgsContainer extends ArgsContainer {
 
     private static Logger logger = Logger.getLogger(ServerArgsContainer.class);
 
-    protected void printErrorMessage() {
-        logger.error("Usage: java -jar cache-server.jar <-port PORT> [-logfile filename.log]");
-        System.exit(1);
+    public ServerArgsContainer() {
+        init();
     }
 
 }

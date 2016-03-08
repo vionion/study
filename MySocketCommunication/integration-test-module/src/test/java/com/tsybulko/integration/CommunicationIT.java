@@ -40,20 +40,20 @@ public class CommunicationIT {
     @Test
     public void testPut() throws Exception {
         HashMapClient client = new HashMapClient();
-        assertTrue(client.run(new String[]{"-serverHost", "localhost", "-serverPort", "1984", "put", "key1", "value1"}) == 0);
+        assertTrue(client.run(new String[]{"-serverHost", "localhost", "-serverPort", "1984", "put", "key1", "value1"}).isEmpty());
     }
 
     @Test
     public void testGet() throws Exception {
         HashMapClient client = new HashMapClient();
-        assertTrue(client.run(new String[]{"-serverHost", "localhost", "-serverPort", "1984", "put", "key2", "value2"}) == 0);
-        assertTrue(client.run(new String[]{"-serverHost", "localhost", "-serverPort", "1984", "get", "key2"}) == 0);
+        assertTrue(client.run(new String[]{"-serverHost", "localhost", "-serverPort", "1984", "put", "key2", "value2"}).isEmpty());
+        assertTrue(client.run(new String[]{"-serverHost", "localhost", "-serverPort", "1984", "get", "key2"}).isEmpty());
     }
 
     @Test
     public void testClear() throws Exception {
         HashMapClient client = new HashMapClient();
-        assertTrue(client.run(new String[]{"-serverHost", "localhost", "-serverPort", "1984", "clearAll"}) == 0);
+        assertTrue(client.run(new String[]{"-serverHost", "localhost", "-serverPort", "1984", "clearAll"}).isEmpty());
     }
 
     @AfterClass

@@ -1,12 +1,14 @@
-package com.tsybulko.dto.service;
+package com.tsybulko.dto;
 
-import com.tsybulko.dto.MapCommand;
+import com.tsybulko.dto.command.MapCommand;
+import com.tsybulko.dto.command.MapCommandDTO;
 import org.apache.log4j.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * @author Vitalii Tsybulko
@@ -36,31 +38,38 @@ public class TransformerService {
     /**
      * Transforms byte array to appropriate command with arguments
      *
-     * @param bytes byte array which need to be transformed
+     * @param bytes     byte array which need to be transformed
+     * @param allErrors
      * @return command after transformation
      */
-    public MapCommand fromBytes(byte[] bytes) {
-        MapCommand command = MapCommand.getInstance(bytes[0]);
+    public MapCommandDTO fromBytes(byte[] bytes, HashMap<String, String> allErrors) {
+        MapCommandDTO command = new MapCommandDTO(MapCommand.getInstance(bytes[0]));
         int keySize, valueSize;
         if (command.isGet()) {
             keySize = ByteBuffer.wrap(Arrays.copyOfRange(bytes, KEYSIZE_OFFSET, KEYSIZE_OFFSET + KEYSIZE_LENGTH)).getShort();
-            checkSum(bytes, keySize);
+            if (!isPackageHolistic(bytes, keySize, allErrors)) {
+                return null;
+            }
             command.setKey(new String(Arrays.copyOfRange(bytes, HEADER_LENGTH, HEADER_LENGTH + keySize)));
         } else if (command.isPut()) {
             keySize = ByteBuffer.wrap(Arrays.copyOfRange(bytes, KEYSIZE_OFFSET, KEYSIZE_OFFSET + KEYSIZE_LENGTH)).getShort();
             valueSize = ByteBuffer.wrap(Arrays.copyOfRange(bytes, KEYSIZE_OFFSET + KEYSIZE_LENGTH, KEYSIZE_OFFSET + KEYSIZE_LENGTH + VALUESIZE_LENGTH)).getShort();
-            checkSum(bytes, keySize + valueSize);
+            if (!isPackageHolistic(bytes, keySize + valueSize, allErrors)) {
+                return null;
+            }
             command.setKey(new String(Arrays.copyOfRange(bytes, HEADER_LENGTH, HEADER_LENGTH + keySize)));
             command.setValue(new String(Arrays.copyOfRange(bytes, HEADER_LENGTH + keySize, HEADER_LENGTH + keySize + valueSize)));
         }
         return command;
     }
 
-    private void checkSum(byte[] bytes, int bodyLength) {
+    private boolean isPackageHolistic(byte[] bytes, int bodyLength, HashMap<String, String> allErrors) {
         if (bytes.length - HEADER_LENGTH != bodyLength) {
             logger.error("Check sum of TCP package, maybe it is corrupted.");
-            System.exit(1);
+            allErrors.put("transformer", "Check sum of TCP package, maybe it is corrupted.");
+            return false;
         }
+        return true;
     }
 
     /**
@@ -69,7 +78,7 @@ public class TransformerService {
      * @param command command which need to be transformed
      * @return array of bytes which consists of command type, arguments lengths in header and then command arguments
      */
-    public byte[] toBytes(MapCommand command) {
+    public byte[] toBytes(MapCommandDTO command) {
         ByteArrayOutputStream bOutput = new ByteArrayOutputStream();
         ByteBuffer dBuf = ByteBuffer.allocate(4);
         byte[] header = new byte[0];

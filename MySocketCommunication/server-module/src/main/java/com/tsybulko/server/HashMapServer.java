@@ -3,8 +3,9 @@ package com.tsybulko.server;
 import com.tsybulko.args.ServerArgsContainer;
 import com.tsybulko.args.ServerParser;
 import com.tsybulko.data.service.DataChangeService;
-import com.tsybulko.dto.MapCommand;
-import com.tsybulko.dto.service.TransformerService;
+import com.tsybulko.dto.command.MapCommandDTO;
+import com.tsybulko.dto.TransformerService;
+import com.tsybulko.validate.ServerArgsValidator;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
@@ -14,6 +15,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 
 /**
  * @author Vitalii Tsybulko
@@ -28,51 +30,50 @@ public class HashMapServer {
 
 
     public static void main(String[] args) throws IOException {
-        turnOn();
-        System.exit(run(args));
+        HashMapServer server = new HashMapServer();
+        server.turnOn();
+        server.run(args);
     }
 
-    /**
-     * Runs the client.
-     */
-    public static int run(String[] args) throws IOException {
-        int exitCode = 0;
+    public HashMap<String, String> run(String[] args) throws IOException {
         BasicConfigurator.configure();
-        ServerArgsContainer argumentContainer = ServerParser.getInstance().parse(args);
+        HashMap<String, String> allErrors = new HashMap<String, String>();
+        ServerArgsContainer argumentContainer = ServerParser.getInstance().parse(args, allErrors);
+        ServerArgsValidator.validate(argumentContainer, allErrors);
 
-        ServerSocket listener = new ServerSocket(argumentContainer.getPort());
+        ServerSocket serverSocket = new ServerSocket(argumentContainer.getPort());
         OutputStream clientOut = null;
         try {
-            while (isAlive) {
-                Socket socket = listener.accept();
+            while (isAlive && allErrors.isEmpty()) {
+                Socket socket = serverSocket.accept();
                 clientOut = socket.getOutputStream();
                 logger.debug("hello, padawan");
-                MapCommand result = TransformerService.getInstance().fromBytes(IOUtils.toByteArray(socket.getInputStream()));
-                DataChangeService.getInstance().performAction(result);
-                new PrintWriter(clientOut, true).println("Ok");
-                logger.info("Ok");
+                MapCommandDTO result = TransformerService.getInstance().fromBytes(IOUtils.toByteArray(socket.getInputStream()), allErrors);
+                String answer = DataChangeService.getInstance().performAction(result);
+                // TODO: test it!
 //                throw new IOException("test error message");
+                new PrintWriter(clientOut, true).println(answer == null ? "404" : answer);
+                logger.info("Ok");
             }
         } catch (IOException e) {
             logger.error("Exception caught when trying to listen on port "
-                    + argumentContainer.getPort() + " or listening for a connection.");
-            e.printStackTrace();
+                    + argumentContainer.getPort() + " or listening for a connection.", e);
             if (clientOut != null) {
                 new PrintWriter(clientOut, true).println("Something went wrong: " + e.getMessage());
             }
-            exitCode = 1;
+            allErrors.put("server", e.getMessage());
         } finally {
-            listener.close();
-            return exitCode;
+            serverSocket.close();
+            return allErrors;
         }
 
     }
 
-    public static void turnOn() {
+    public void turnOn() {
         isAlive = true;
     }
 
-    public static void turnOff() {
+    public void turnOff() {
         isAlive = false;
     }
 }

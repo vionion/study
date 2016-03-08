@@ -1,4 +1,4 @@
-package common;
+package com.tsybulko.common;
 
 import org.apache.log4j.BasicConfigurator;
 import org.junit.Before;
