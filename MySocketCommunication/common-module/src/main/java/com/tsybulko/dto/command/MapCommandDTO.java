@@ -1,56 +1,40 @@
-package com.tsybulko.dto;
+package com.tsybulko.dto.command;
 
 /**
  * @author Vitalii Tsybulko
  * @version 1.0
  * @since 02/23/2016 14:07
  */
-public enum MapCommand {
+public class MapCommandDTO {
 
-    put((byte) 1),
-    get((byte) 2),
-    clearAll((byte) 3);
-
-    private final byte commandCode;
+    private final MapCommand command;
     private String key;
     private String value;
 
-    MapCommand(byte commandCode) {
-        this.commandCode = commandCode;
+    public MapCommandDTO(MapCommand command) {
+        this.command = command;
         this.value = null;
         this.key = null;
     }
 
-    public static MapCommand getInstance(byte commandCode) {
-        if (commandCode == put.getCommandCode()) {
-            return put;
-        } else if (commandCode == get.getCommandCode()) {
-            return get;
-        } else if (commandCode == clearAll.getCommandCode()) {
-            return clearAll;
-        } else {
-            return null;
-        }
-    }
-
-    public String getCommand() {
-        return this.getValue();
+    public MapCommand getCommand() {
+        return command;
     }
 
     public byte getCommandCode() {
-        return commandCode;
+        return command.getCommandCode();
     }
 
     public boolean isPut() {
-        return this.equals(put);
+        return this.command == MapCommand.put;
     }
 
     public boolean isGet() {
-        return this.equals(get);
+        return this.command == MapCommand.get;
     }
 
     public boolean isClear() {
-        return this.equals(clearAll);
+        return this.command == MapCommand.clearAll;
     }
 
     public String getValue() {
@@ -83,4 +67,5 @@ public enum MapCommand {
             return false;
         }
     }
+
 }

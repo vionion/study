@@ -11,9 +11,8 @@ public class ServerArgsContainer extends ArgsContainer {
 
     private static Logger logger = Logger.getLogger(ServerArgsContainer.class);
 
-    protected void printErrorMessage() {
-        logger.error("Usage: java -jar cache-server.jar <-port PORT> [-logfile filename.log]");
-        System.exit(1);
+    public ServerArgsContainer() {
+        init();
     }
 
 }

@@ -2,18 +2,14 @@ package com.tsybulko.server;
 
 import com.tsybulko.args.ServerArgsContainer;
 import com.tsybulko.args.ServerParser;
-import com.tsybulko.data.service.DataChangeService;
-import com.tsybulko.dto.MapCommand;
-import com.tsybulko.dto.service.TransformerService;
-import org.apache.commons.io.IOUtils;
+import com.tsybulko.validate.ServerArgsValidator;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 
 /**
  * @author Vitalii Tsybulko
@@ -24,55 +20,45 @@ import java.net.Socket;
 public class HashMapServer {
 
     private static Logger logger = Logger.getLogger(HashMapServer.class);
-    private static volatile boolean isAlive = false;
+    private volatile boolean enabled = false;
+    private volatile boolean running = false;
 
 
     public static void main(String[] args) throws IOException {
-        turnOn();
-        System.exit(run(args));
+        HashMapServer server = new HashMapServer();
+        server.turnOn();
+        server.run(args);
     }
 
-    /**
-     * Runs the client.
-     */
-    public static int run(String[] args) throws IOException {
-        int exitCode = 0;
+    public HashMap<String, String> run(String[] args) throws IOException {
         BasicConfigurator.configure();
-        ServerArgsContainer argumentContainer = ServerParser.getInstance().parse(args);
-
-        ServerSocket listener = new ServerSocket(argumentContainer.getPort());
-        OutputStream clientOut = null;
-        try {
-            while (isAlive) {
-                Socket socket = listener.accept();
-                clientOut = socket.getOutputStream();
-                logger.debug("hello, padawan");
-                MapCommand result = TransformerService.getInstance().fromBytes(IOUtils.toByteArray(socket.getInputStream()));
-                DataChangeService.getInstance().performAction(result);
-                new PrintWriter(clientOut, true).println("Ok");
-                logger.info("Ok");
-//                throw new IOException("test error message");
-            }
-        } catch (IOException e) {
-            logger.error("Exception caught when trying to listen on port "
-                    + argumentContainer.getPort() + " or listening for a connection.");
-            e.printStackTrace();
-            if (clientOut != null) {
-                new PrintWriter(clientOut, true).println("Something went wrong: " + e.getMessage());
-            }
-            exitCode = 1;
-        } finally {
-            listener.close();
-            return exitCode;
+        HashMap<String, String> allErrors = new HashMap<String, String>();
+        ServerArgsContainer argumentContainer = ServerParser.getInstance().parse(args, allErrors);
+        ServerArgsValidator.validate(argumentContainer, allErrors);
+        ServerSocket serverSocket = new ServerSocket(argumentContainer.getPort());
+        running = true;
+        Socket socket = null;
+        //Starts new thread for every client, connected to this server
+        while (enabled && allErrors.isEmpty()) {
+            socket = serverSocket.accept();
+            ClientThread clientThread = new ClientThread(socket, allErrors);
+            clientThread.start();
         }
+        running = false;
+        serverSocket.close();
+        return allErrors;
 
     }
 
-    public static void turnOn() {
-        isAlive = true;
+    public void turnOn() {
+        enabled = true;
     }
 
-    public static void turnOff() {
-        isAlive = false;
+    public void turnOff() {
+        enabled = false;
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 }

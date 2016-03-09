@@ -1,6 +1,6 @@
 package com.tsybulko.data;
 
-import common.TestWithLogger;
+import com.tsybulko.common.TestWithLogger;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

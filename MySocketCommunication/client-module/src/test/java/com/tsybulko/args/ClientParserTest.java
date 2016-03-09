@@ -1,8 +1,11 @@
 package com.tsybulko.args;
 
-import com.tsybulko.dto.MapCommand;
+import com.tsybulko.dto.command.MapCommand;
 
-import static org.junit.Assert.*;
+import java.util.HashMap;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 /**
  * @author Vitalii Tsybulko
@@ -14,24 +17,24 @@ public class ClientParserTest extends ParserTest {
     @org.junit.Test
     public void testParsePort() throws Exception {
         String[] args = {"-serverHost", "host", "-serverPort", "4800", "clearAll"};
-        ClientArgsContainer argumentContainer = ClientParser.getInstance().parse(args);
+        ClientArgsContainer argumentContainer = ClientParser.getInstance().parse(args, new HashMap<String, String>());
         assertEquals(4800, argumentContainer.getPort());
     }
 
     @org.junit.Test
     public void testParseLogfile() throws Exception {
         String[] args = {"-serverHost", "host", "-serverPort", "4800", "clearAll", "-logfile", "someFile"};
-        ClientArgsContainer argumentContainer = ClientParser.getInstance().parse(args);
+        ClientArgsContainer argumentContainer = ClientParser.getInstance().parse(args, new HashMap<String, String>());
         assertEquals("someFile", argumentContainer.getLogFile());
     }
 
     @org.junit.Test
     public void testParseCommand() throws Exception {
         String[] args = {"-serverHost", "host", "-serverPort", "4800", "put", "key", "value"};
-        ClientArgsContainer argumentContainer = ClientParser.getInstance().parse(args);
-        assertSame(MapCommand.put, argumentContainer.getCommand());
-        assertEquals("key", argumentContainer.getCommand().getKey());
-        assertEquals("value", argumentContainer.getCommand().getValue());
+        ClientArgsContainer argumentContainer = ClientParser.getInstance().parse(args, new HashMap<String, String>());
+        assertSame(MapCommand.put, argumentContainer.getCommandDTO().getCommand());
+        assertEquals("key", argumentContainer.getCommandDTO().getKey());
+        assertEquals("value", argumentContainer.getCommandDTO().getValue());
     }
 
 }

@@ -2,6 +2,8 @@ package com.tsybulko.args;
 
 import org.apache.log4j.Logger;
 
+import java.util.HashMap;
+
 /**
  * @author Vitalii Tsybulko
  * @version 1.0
@@ -20,12 +22,11 @@ public class ServerParser extends Parser {
         return INSTANCE;
     }
 
-    public ServerArgsContainer parse(String[] args) {
+    public ServerArgsContainer parse(String[] args, HashMap<String, String> errors) {
         ServerArgsContainer container = new ServerArgsContainer();
         for (int i = 0; i < args.length; i++) {
-            checkPortLogFile(container, args, i);
+            checkPortLogFile(container, args, i, errors);
         }
-        container.validate();
         return container;
     }
 

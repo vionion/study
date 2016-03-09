@@ -1,6 +1,6 @@
 package com.tsybulko.args;
 
-import common.TestWithLogger;
+import com.tsybulko.common.TestWithLogger;
 import org.junit.Test;
 
 /**

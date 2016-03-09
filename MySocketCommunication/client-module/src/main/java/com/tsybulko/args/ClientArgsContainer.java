@@ -1,6 +1,6 @@
 package com.tsybulko.args;
 
-import com.tsybulko.dto.MapCommand;
+import com.tsybulko.dto.command.MapCommandDTO;
 import org.apache.log4j.Logger;
 
 /**
@@ -12,20 +12,18 @@ public class ClientArgsContainer extends ArgsContainer {
 
     private static Logger logger = Logger.getLogger(ClientArgsContainer.class);
 
-    protected String serverHost = null;
-    protected MapCommand command = null;
+    protected String serverHost;
+    protected MapCommandDTO command;
 
-    @Override
-    public void validate() {
-        super.validate();
-        if (serverHost == null || command == null || !command.isInitialised()) {
-            printErrorMessage();
-        }
+    public ClientArgsContainer() {
+        init();
     }
 
-    protected void printErrorMessage() {
-        logger.error("Usage: java -jar cache-client.jar <-serverHost HOST> <-serverPort PORT> <put KEY VALUE | get KEY | clearAll> [-logfile filename.log]");
-        System.exit(1);
+    @Override
+    protected void init() {
+        super.init();
+        serverHost = null;
+        command = null;
     }
 
     public String getServerHost() {
@@ -36,11 +34,11 @@ public class ClientArgsContainer extends ArgsContainer {
         this.serverHost = serverHost;
     }
 
-    public MapCommand getCommand() {
+    public MapCommandDTO getCommandDTO() {
         return command;
     }
 
-    public void setCommand(MapCommand command) {
+    public void setCommandDTO(MapCommandDTO command) {
         this.command = command;
     }
 }
