@@ -14,10 +14,12 @@ public class DataChangeService {
     private static Logger logger = Logger.getLogger(DataChangeService.class);
 
     private DataStorage dataStorage = DataStorage.getInstance();
+    private DataChangeMonitoringService monitoringService = DataChangeMonitoringService.getInstance();
 
     private static final DataChangeService INSTANCE = new DataChangeService();
 
     private DataChangeService() {
+        monitoringService.runMonitor();
     }
 
     public static DataChangeService getInstance() {
@@ -35,6 +37,7 @@ public class DataChangeService {
             logger.info("Value from HashMap data storage by key \"" + command.getKey() + "\" is \"" + result + "\".");
         } else if (command.isPut()) {
             result = dataStorage.put(command.getKey(), command.getValue());
+            monitoringService.incrementPuts();
             logger.info("Successfully " + (result == null ? "inserted." : "replaced."));
         } else {
             logger.error("Unknown command.");

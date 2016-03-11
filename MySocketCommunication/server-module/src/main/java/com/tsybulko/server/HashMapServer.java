@@ -30,6 +30,12 @@ public class HashMapServer {
         server.run(args);
     }
 
+    /**
+     * Turns on server and manage creating new threads for processing new clientSockets connections
+     * @param args arguments for setting up
+     * @return HashMap of errors
+     * @throws IOException
+     */
     public HashMap<String, String> run(String[] args) throws IOException {
         BasicConfigurator.configure();
         HashMap<String, String> allErrors = new HashMap<String, String>();
@@ -37,12 +43,12 @@ public class HashMapServer {
         ServerArgsValidator.validate(argumentContainer, allErrors);
         ServerSocket serverSocket = new ServerSocket(argumentContainer.getPort());
         running = true;
-        Socket socket = null;
+        Socket socket;
         //Starts new thread for every client, connected to this server
         while (enabled && allErrors.isEmpty()) {
             socket = serverSocket.accept();
-            ClientThread clientThread = new ClientThread(socket, allErrors);
-            clientThread.start();
+            ClientProcessorThread clientProcessorThread = new ClientProcessorThread(socket, allErrors);
+            clientProcessorThread.start();
         }
         running = false;
         serverSocket.close();

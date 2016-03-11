@@ -1,9 +1,13 @@
 package com.tsybulko.args;
 
 import com.tsybulko.dto.command.MapCommandDTO;
+import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.Properties;
 
 /**
  * @author Vitalii Tsybulko
@@ -35,6 +39,17 @@ public abstract class Parser {
             }
         } else if (args[i].equals("-logfile")) {
             container.setLogFile(args[++i]);
+            if (errors.isEmpty()) {
+                try {
+                    Properties p = new Properties();
+                    p.load(ClassLoader.getSystemClassLoader().getResourceAsStream("log4j.properties"));
+                    p.put("logfilename", container.getLogFile()); // overwrite "logfilename"
+                    PropertyConfigurator.configure(p);
+                } catch (IOException e) {
+                    BasicConfigurator.configure();
+                    logger.fatal("log4j.properties is not found.", e);
+                }
+            }
         }
     }
 

@@ -1,6 +1,7 @@
 package com.tsybulko.data;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author Vitalii Tsybulko
@@ -10,7 +11,7 @@ import java.util.HashMap;
 public class DataStorage {
 
     private static final DataStorage INSTANCE = new DataStorage();
-    private static HashMap<String, String> data = new HashMap<String, String>();
+    private static ConcurrentMap<String, String> data = new ConcurrentHashMap<String, String>();
 
     private DataStorage() {
     }

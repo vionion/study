@@ -40,56 +40,90 @@ public class MignonClient {
 
     /**
      * Opens connection with server socket, based on given in constructor params
+     *
+     * @return success flag of performing operation
      */
-    public void openConnection() {
+    public boolean openConnection() {
+        boolean success = true;
         try {
             clientSocket = new Socket(serverHost, port);
             clientSocket.isBound();
             output = clientSocket.getOutputStream();
             input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         } catch (UnknownHostException e) {
+            success = false;
             logger.error("Don't know about host " + serverHost);
             errors.put("clientExecution", "Don't know about host " + serverHost);
         } catch (IOException e) {
+            success = false;
             logger.error("Couldn't get I/O for the connection to " +
-                    serverHost);
+                    serverHost + " and open connection");
             errors.put("clientExecution", "Couldn't get I/O for the connection to " +
-                    serverHost);
+                    serverHost + " and open connection");
+        } finally {
+            return success;
         }
     }
 
     /**
      * Sends command, which must be in byte form, to server by opened connection
      *
-     * @param fromUser byte view of command which must be sent
+     * @param byteCommand byte view of command which must be sent
+     * @return success flag of performing operation
      */
-    public void sendCommand(byte[] fromUser) {
+    public boolean sendCommand(byte[] byteCommand) {
+        boolean success = true;
         try {
-            long start = System.currentTimeMillis();
-            output.write(fromUser);
+            long start = System.nanoTime();
+            output.write(byteCommand);
             output.flush();
             logger.info(input.readLine());
-            long end = System.currentTimeMillis();
-            logger.info("Sending command had taken " + (end - start) + " millis");
+            long end = System.nanoTime();
+            logger.info("Sending command had taken " + (end - start) + " nanosec.");
         } catch (IOException e) {
+            success = false;
             logger.error("Couldn't get I/O for the connection to " +
-                    serverHost);
-            errors.put("clientExecution", "Couldn't get I/O for the connection to " +
-                    serverHost);
+                    serverHost + " and send command");
+
+            // I hide it `cause if we used errors map for interrupting application when they happens
+            // we would have real problems with successive code
+
+//            errors.put("clientExecution", "Couldn't get I/O for the connection to " +
+//                    serverHost + " and send command");
+
+            for (int i = 0; i < 10; i++) {
+                Thread.sleep(1000);
+                logger.info("Trying to reconnect to " + serverHost);
+                if (openConnection()) {
+                    success = true;
+                    break;
+                }
+            }
+        } finally {
+            return success;
         }
     }
 
     /**
      * Just closes connection with server
+     *
+     * @return success flag of performing operation
      */
-    public void closeConnection() {
+    public boolean closeConnection() {
+        boolean success = true;
         try {
             clientSocket.shutdownOutput();
+            clientSocket.close();
         } catch (IOException e) {
+            success = false;
             logger.error("Couldn't get I/O for the connection to " +
-                    serverHost);
+                    serverHost + " and close connection");
             errors.put("clientExecution", "Couldn't get I/O for the connection to " +
-                    serverHost);
+                    serverHost + " and close connection");
+        } finally {
+            return success;
         }
     }
+
+
 }

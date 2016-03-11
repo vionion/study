@@ -66,6 +66,11 @@ public class TransformerService {
         return command;
     }
 
+    /**
+     * Calculates length of data part of package from header
+     * @param bytes array of header bytes
+     * @return length of data
+     */
     public int getDataPartSize(byte[] bytes) {
         MapCommand command = MapCommand.getInstance(bytes[0]);
         int keySize, valueSize;
@@ -81,6 +86,13 @@ public class TransformerService {
         }
     }
 
+    /**
+     * Checks checksum of package
+     * @param header header of package
+     * @param data data of package
+     * @param allErrors map for errors
+     * @return result of checking integrity of package
+     */
     private boolean isPackageHolistic(byte[] header, byte[] data, HashMap<String, String> allErrors) {
         Checksum checksum = new CRC32();
         checksum.update(data, 0, data.length);

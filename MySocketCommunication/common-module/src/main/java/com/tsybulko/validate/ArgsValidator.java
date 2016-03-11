@@ -1,15 +1,10 @@
 package com.tsybulko.validate;
 
 import com.tsybulko.args.ArgsContainer;
-import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.HashMap;
-import java.util.Properties;
 
 /**
  * @author Vitalii Tsybulko
@@ -37,15 +32,6 @@ public abstract class ArgsValidator {
         if (container.getLogFile() != null) {
             if (!new File(container.getLogFile()).exists()) {
                 logger.info("File " + container.getLogFile() + " is not exists and will be created.");
-            }
-            try {
-                Properties p = new Properties();
-                p.load(new FileInputStream("log4j.properties"));
-                p.put("logfilename", container.getLogFile()); // overwrite "logfilename"
-                PropertyConfigurator.configure(p);
-            } catch (IOException e) {
-                BasicConfigurator.configure();
-                logger.fatal("log4j.properties is not found.", e);
             }
         }
         if (!errors.isEmpty()) {
