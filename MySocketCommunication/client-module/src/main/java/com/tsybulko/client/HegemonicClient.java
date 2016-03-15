@@ -2,7 +2,7 @@ package com.tsybulko.client;
 
 import com.tsybulko.args.ClientArgsContainer;
 import com.tsybulko.args.ClientParser;
-import com.tsybulko.dto.TransformerService;
+import com.tsybulko.dto.service.MapCommandTransformerService;
 import com.tsybulko.validate.ClientArgsValidator;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
@@ -36,10 +36,14 @@ public class HegemonicClient {
         HashMap<String, String> allErrors = new HashMap<String, String>();
         ClientArgsContainer argumentContainer = ClientParser.getInstance().parse(args, allErrors);
         ClientArgsValidator.validate(argumentContainer, allErrors);
+        if (!allErrors.isEmpty()) {
+            logger.error("Usage: java -jar cache-client.jar <-serverHost HOST> <-serverPort PORT> <put KEY VALUE | get KEY | clearAll> [-logfile filename.log]");
+            allErrors.put("usage", "Usage: java -jar cache-client.jar <-serverHost HOST> <-serverPort PORT> <put KEY VALUE | get KEY | clearAll> [-logfile filename.log]");
+        }
         MignonClient mignon = new MignonClient(argumentContainer.getServerHost(), argumentContainer.getPort(), allErrors);
         if (allErrors.isEmpty()) {
             mignon.openConnection();
-            byte[] fromUser = TransformerService.getInstance().toBytes(argumentContainer.getCommandDTO());
+            byte[] fromUser = MapCommandTransformerService.getInstance().toBytes(argumentContainer.getCommandDTO());
             if (fromUser != null) {
                 mignon.sendCommand(fromUser);
             }

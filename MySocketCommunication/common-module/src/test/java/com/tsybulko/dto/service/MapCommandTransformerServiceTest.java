@@ -1,4 +1,4 @@
-package com.tsybulko.dto;
+package com.tsybulko.dto.service;
 
 import com.tsybulko.common.TestWithLogger;
 import com.tsybulko.dto.command.MapCommand;
@@ -16,15 +16,15 @@ import static org.junit.Assert.assertTrue;
  * @version 1.0
  * @since 02/29/2016 12:07
  */
-public class TransformerServiceTest extends TestWithLogger {
+public class MapCommandTransformerServiceTest extends TestWithLogger {
 
-    private TransformerService transformer = TransformerService.getInstance();
+    private MapCommandTransformerService transformer = MapCommandTransformerService.getInstance();
 
     @Test
     public void testToBytesFromBytes() throws Exception {
         HashMap<String, String> allErrors = new HashMap<String, String>();
         byte[] commandByte = transformer.toBytes(new MapCommandDTO(MapCommand.clearAll));
-        assertEquals(MapCommand.clearAll, transformer.fromBytes(Arrays.copyOfRange(commandByte, 0, TransformerService.HEADER_LENGTH), Arrays.copyOfRange(commandByte, TransformerService.HEADER_LENGTH, commandByte.length), allErrors).getCommand());
+        assertEquals(MapCommand.clearAll, transformer.fromBytes(Arrays.copyOfRange(commandByte, 0, MapCommandTransformerService.HEADER_LENGTH), Arrays.copyOfRange(commandByte, MapCommandTransformerService.HEADER_LENGTH, commandByte.length), allErrors).getCommand());
         assertTrue(allErrors.isEmpty());
     }
 
@@ -44,7 +44,7 @@ public class TransformerServiceTest extends TestWithLogger {
 
         HashMap<String, String> allErrors = new HashMap<String, String>();
         byte[] longPutCommandByte = transformer.toBytes(longPutCommand);
-        MapCommandDTO commandForComparison = transformer.fromBytes(Arrays.copyOfRange(longPutCommandByte, 0, TransformerService.HEADER_LENGTH), Arrays.copyOfRange(longPutCommandByte, TransformerService.HEADER_LENGTH, longPutCommandByte.length), allErrors);
+        MapCommandDTO commandForComparison = transformer.fromBytes(Arrays.copyOfRange(longPutCommandByte, 0, MapCommandTransformerService.HEADER_LENGTH), Arrays.copyOfRange(longPutCommandByte, MapCommandTransformerService.HEADER_LENGTH, longPutCommandByte.length), allErrors);
         assertTrue(allErrors.isEmpty());
         assertEquals(longPutCommand.getCommand(), commandForComparison.getCommand());
         assertEquals(longPutCommand.getKey(), commandForComparison.getKey());
@@ -57,8 +57,8 @@ public class TransformerServiceTest extends TestWithLogger {
         MapCommandDTO command = new MapCommandDTO(MapCommand.get);
         command.setKey("testKey");
         byte[] commandBytes = transformer.toBytes(command);
-        commandBytes[TransformerService.HEADER_LENGTH - 1] += 1;
-        transformer.fromBytes(Arrays.copyOfRange(commandBytes, 0, TransformerService.HEADER_LENGTH), Arrays.copyOfRange(commandBytes, TransformerService.HEADER_LENGTH, commandBytes.length), allErrors);
+        commandBytes[MapCommandTransformerService.HEADER_LENGTH - 1] += 1;
+        transformer.fromBytes(Arrays.copyOfRange(commandBytes, 0, MapCommandTransformerService.HEADER_LENGTH), Arrays.copyOfRange(commandBytes, MapCommandTransformerService.HEADER_LENGTH, commandBytes.length), allErrors);
         assertTrue(!allErrors.isEmpty());
     }
 }

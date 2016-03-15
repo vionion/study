@@ -1,11 +1,13 @@
 package com.tsybulko.client.multithreading;
 
 import com.tsybulko.client.MignonClient;
-import com.tsybulko.dto.TransformerService;
+import com.tsybulko.dto.service.MapCommandTransformerService;
 import com.tsybulko.dto.command.MapCommand;
 import com.tsybulko.dto.command.MapCommandDTO;
 import com.tsybulko.random.RandomCommandGenerator;
 import org.apache.log4j.Logger;
+
+import java.util.HashMap;
 
 /**
  * @author Vitalii Tsybulko
@@ -19,11 +21,15 @@ public class RunnableMignon implements Runnable {
     private MignonClient mignon;
     private volatile boolean isRunning = false;
     private static RandomCommandGenerator commandGenerator = RandomCommandGenerator.getInstance();
-    private static TransformerService transformerService = TransformerService.getInstance();
+    private static MapCommandTransformerService mapCommandTransformerService = MapCommandTransformerService.getInstance();
 
 
     public RunnableMignon(String host, int port) {
         mignon = new MignonClient(host, port);
+    }
+
+    public RunnableMignon(String host, int port, HashMap<String, String> errors) {
+        mignon = new MignonClient(host, port, errors);
     }
 
     /**
@@ -36,7 +42,7 @@ public class RunnableMignon implements Runnable {
         MapCommandDTO command = new MapCommandDTO(MapCommand.put);
         while (isRunning) {
             commandGenerator.initRandomPutCommand(command);
-            isRunning = mignon.sendCommand(transformerService.toBytes(command));
+            isRunning = mignon.sendCommand(mapCommandTransformerService.toBytes(command)).isSuccess();
         }
         mignon.closeConnection();
     }

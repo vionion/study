@@ -34,12 +34,7 @@ public abstract class ArgsValidator {
                 logger.info("File " + container.getLogFile() + " is not exists and will be created.");
             }
         }
-        if (!errors.isEmpty()) {
-            printErrorMessage(errors);
-        }
         return errors;
     }
-
-    protected static void printErrorMessage(HashMap<String, String> errors){}
 
 }

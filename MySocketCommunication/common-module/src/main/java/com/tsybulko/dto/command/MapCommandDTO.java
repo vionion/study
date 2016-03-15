@@ -1,11 +1,13 @@
 package com.tsybulko.dto.command;
 
+import com.tsybulko.dto.IDTO;
+
 /**
  * @author Vitalii Tsybulko
  * @version 1.0
  * @since 02/23/2016 14:07
  */
-public class MapCommandDTO {
+public class MapCommandDTO implements IDTO {
 
     private final MapCommand command;
     private String key;

@@ -26,7 +26,6 @@ public class HashMapServer {
 
     public static void main(String[] args) throws IOException {
         HashMapServer server = new HashMapServer();
-        server.turnOn();
         server.run(args);
     }
 
@@ -41,8 +40,13 @@ public class HashMapServer {
         HashMap<String, String> allErrors = new HashMap<String, String>();
         ServerArgsContainer argumentContainer = ServerParser.getInstance().parse(args, allErrors);
         ServerArgsValidator.validate(argumentContainer, allErrors);
+        if(!allErrors.isEmpty()){
+            logger.error("Usage: java -jar cache-server.jar <-port PORT> [-logfile filename.log]");
+            allErrors.put("usage", "Usage: java -jar cache-server.jar <-port PORT> [-logfile filename.log]");
+        }
         ServerSocket serverSocket = new ServerSocket(argumentContainer.getPort());
         running = true;
+        enabled = true;
         Socket socket;
         //Starts new thread for every client, connected to this server
         while (enabled && allErrors.isEmpty()) {
@@ -54,10 +58,6 @@ public class HashMapServer {
         serverSocket.close();
         return allErrors;
 
-    }
-
-    public void turnOn() {
-        enabled = true;
     }
 
     public void turnOff() {

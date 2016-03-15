@@ -2,6 +2,7 @@ package com.tsybulko.data.service;
 
 import com.tsybulko.data.DataStorage;
 import com.tsybulko.dto.command.MapCommandDTO;
+import com.tsybulko.dto.response.ResponseDTO;
 import org.apache.log4j.Logger;
 
 /**
@@ -26,22 +27,22 @@ public class DataChangeService {
         return INSTANCE;
     }
 
-    public String performAction(MapCommandDTO command) {
-        String result = null;
+    public ResponseDTO performAction(MapCommandDTO command) {
+        ResponseDTO result = new ResponseDTO(true, "Data erased.");
         if (command.isClear()) {
             dataStorage.clear();
             logger.info("All data is successfully erased.");
-            result = "Data erased.";
         } else if (command.isGet()) {
-            result = dataStorage.get(command.getKey());
+            result.setAnswer(String.valueOf(dataStorage.get(command.getKey())));
             logger.info("Value from HashMap data storage by key \"" + command.getKey() + "\" is \"" + result + "\".");
         } else if (command.isPut()) {
-            result = dataStorage.put(command.getKey(), command.getValue());
+            result.setAnswer(String.valueOf(dataStorage.put(command.getKey(), command.getValue())));
             monitoringService.incrementPuts();
-            logger.info("Successfully " + (result == null ? "inserted." : "replaced."));
+            logger.info("Successfully " + (result.getAnswer().equals("null") ? "inserted." : "replaced."));
         } else {
             logger.error("Unknown command.");
-            result = "Unknown command.";
+            result.setAnswer("Unknown command.");
+            result.setSuccess(false);
         }
         return result;
     }

@@ -1,11 +1,15 @@
 package com.tsybulko.server;
 
 import com.tsybulko.data.service.DataChangeService;
-import com.tsybulko.dto.TransformerService;
+import com.tsybulko.dto.service.MapCommandTransformerService;
+import com.tsybulko.dto.service.ResponseTransformerService;
 import com.tsybulko.dto.command.MapCommandDTO;
+import com.tsybulko.dto.response.ResponseDTO;
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.HashMap;
 
@@ -18,7 +22,8 @@ public class ClientProcessorThread extends Thread {
 
     private static Logger logger = Logger.getLogger(ClientProcessorThread.class);
     private final HashMap<String, String> errors;
-    private static final TransformerService transformer = TransformerService.getInstance();
+    private static final MapCommandTransformerService mapTransformer = MapCommandTransformerService.getInstance();
+    private static final ResponseTransformerService responseTransformer = ResponseTransformerService.getInstance();
     protected Socket socket;
 
     public ClientProcessorThread(Socket clientSocket, HashMap<String, String> allErrors) {
@@ -33,7 +38,7 @@ public class ClientProcessorThread extends Thread {
     public void run() {
         InputStream clientIn;
         OutputStream clientOut = null;
-        byte[] header = new byte[TransformerService.HEADER_LENGTH];
+        byte[] header = new byte[MapCommandTransformerService.HEADER_LENGTH];
         byte[] data = new byte[0];
         int dataLength;
         try {
@@ -45,17 +50,19 @@ public class ClientProcessorThread extends Thread {
                 if (clientIn.read(header, 0, header.length) < 0) {
                     break;
                 }
-                dataLength = transformer.getDataPartSize(header);
+                dataLength = mapTransformer.getDataPartSize(header);
                 if (dataLength > 0) {
                     data = new byte[dataLength];
                     clientIn.read(data, 0, dataLength);
                 }
-                MapCommandDTO command = transformer.fromBytes(header, data, errors);
+                MapCommandDTO command = mapTransformer.fromBytes(header, data, errors);
                 if (command != null) {
-                    String answer = DataChangeService.getInstance().performAction(command);
+                    ResponseDTO response = DataChangeService.getInstance().performAction(command);
                     // TODO: test it!
 //                throw new IOException("test error message");
-                    new PrintWriter(clientOut, true).println(answer);
+                    clientOut.write(responseTransformer.toBytes(response));
+                    clientOut.flush();
+
                     logger.info("Ok");
                     long end = System.nanoTime();
                     logger.info("Processing command had taken " + (end - start) + " nanosec.");
@@ -66,9 +73,6 @@ public class ClientProcessorThread extends Thread {
         } catch (IOException e) {
             logger.error("Exception caught when trying to listen on port "
                     + socket.getPort() + " or listening for a connection.", e);
-            if (clientOut != null) {
-                new PrintWriter(clientOut, true).println("Something went wrong: " + e.getMessage());
-            }
             errors.put("server", e.getMessage());
         } finally {
             try {

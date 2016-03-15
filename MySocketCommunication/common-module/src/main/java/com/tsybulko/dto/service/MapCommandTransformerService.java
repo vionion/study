@@ -1,4 +1,4 @@
-package com.tsybulko.dto;
+package com.tsybulko.dto.service;
 
 import com.tsybulko.dto.command.MapCommand;
 import com.tsybulko.dto.command.MapCommandDTO;
@@ -17,9 +17,9 @@ import java.util.zip.Checksum;
  * @version 1.0
  * @since 02/25/2016 12:05
  */
-public class TransformerService {
+public class MapCommandTransformerService extends TransformerService {
 
-    private static Logger logger = Logger.getLogger(TransformerService.class);
+    private static Logger logger = Logger.getLogger(MapCommandTransformerService.class);
 
     public static final int HEADER_LENGTH = 13;
     public static final int CHECKSUM_LENGTH = 8;
@@ -29,12 +29,12 @@ public class TransformerService {
     public static final int KEYSIZE_OFFSET = 1;
     public static final int VALUESIZE_OFFSET = 3;
 
-    private static final TransformerService INSTANCE = new TransformerService();
+    private static final MapCommandTransformerService INSTANCE = new MapCommandTransformerService();
 
-    private TransformerService() {
+    private MapCommandTransformerService() {
     }
 
-    public static TransformerService getInstance() {
+    public static MapCommandTransformerService getInstance() {
         return INSTANCE;
     }
 
@@ -45,19 +45,20 @@ public class TransformerService {
      * @param allErrors
      * @return command after transformation
      */
+    @Override
     public MapCommandDTO fromBytes(byte[] header, byte[] data, HashMap<String, String> allErrors) {
         MapCommandDTO command = new MapCommandDTO(MapCommand.getInstance(header[0]));
         int keySize, valueSize;
         if (command.isGet()) {
             keySize = ByteBuffer.wrap(Arrays.copyOfRange(header, KEYSIZE_OFFSET, KEYSIZE_OFFSET + KEYSIZE_LENGTH)).getShort();
-            if (!isPackageHolistic(header, data, allErrors)) {
+            if (!isPackageHolistic(header, data, allErrors, CHECKSUM_OFFSET, CHECKSUM_LENGTH)) {
                 return null;
             }
             command.setKey(new String(Arrays.copyOfRange(data, 0, keySize)));
         } else if (command.isPut()) {
             keySize = ByteBuffer.wrap(Arrays.copyOfRange(header, KEYSIZE_OFFSET, KEYSIZE_OFFSET + KEYSIZE_LENGTH)).getShort();
             valueSize = ByteBuffer.wrap(Arrays.copyOfRange(header, KEYSIZE_OFFSET + KEYSIZE_LENGTH, KEYSIZE_OFFSET + KEYSIZE_LENGTH + VALUESIZE_LENGTH)).getShort();
-            if (!isPackageHolistic(header, data, allErrors)) {
+            if (!isPackageHolistic(header, data, allErrors, CHECKSUM_OFFSET, CHECKSUM_LENGTH)) {
                 return null;
             }
             command.setKey(new String(Arrays.copyOfRange(data, 0, keySize)));
@@ -68,9 +69,11 @@ public class TransformerService {
 
     /**
      * Calculates length of data part of package from header
+     *
      * @param bytes array of header bytes
      * @return length of data
      */
+    @Override
     public int getDataPartSize(byte[] bytes) {
         MapCommand command = MapCommand.getInstance(bytes[0]);
         int keySize, valueSize;
@@ -84,24 +87,6 @@ public class TransformerService {
         } else {
             return 0;
         }
-    }
-
-    /**
-     * Checks checksum of package
-     * @param header header of package
-     * @param data data of package
-     * @param allErrors map for errors
-     * @return result of checking integrity of package
-     */
-    private boolean isPackageHolistic(byte[] header, byte[] data, HashMap<String, String> allErrors) {
-        Checksum checksum = new CRC32();
-        checksum.update(data, 0, data.length);
-        if (checksum.getValue() != ByteBuffer.wrap(Arrays.copyOfRange(header, CHECKSUM_OFFSET, CHECKSUM_OFFSET + CHECKSUM_LENGTH)).getLong()) {
-            logger.error("Check sum of TCP package, maybe it is corrupted.");
-            allErrors.put("transformer", "Check sum of TCP package, maybe it is corrupted.");
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -138,14 +123,6 @@ public class TransformerService {
             e.printStackTrace();
         }
         return mergeArrays(header, body);
-    }
-
-    private byte[] mergeArrays(byte[] a, byte[] b) {
-        int length = a.length + b.length;
-        byte[] result = new byte[length];
-        System.arraycopy(a, 0, result, 0, a.length);
-        System.arraycopy(b, 0, result, a.length, b.length);
-        return result;
     }
 
 }

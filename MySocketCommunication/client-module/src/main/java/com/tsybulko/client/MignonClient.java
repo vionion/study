@@ -1,10 +1,11 @@
 package com.tsybulko.client;
 
+import com.tsybulko.dto.service.ResponseTransformerService;
+import com.tsybulko.dto.response.ResponseDTO;
 import org.apache.log4j.Logger;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -19,12 +20,13 @@ public class MignonClient {
 
     private static Logger logger = Logger.getLogger(MignonClient.class);
 
-    String serverHost;
+    protected String serverHost;
     int port;
-    Socket clientSocket;
-    OutputStream output;
-    BufferedReader input;
-    HashMap<String, String> errors;
+    private Socket clientSocket;
+    protected OutputStream output;
+    protected InputStream input;
+    private HashMap<String, String> errors;
+    private ResponseTransformerService transformer = ResponseTransformerService.getInstance();
 
     public MignonClient(String serverHost, int port) {
         this.serverHost = serverHost;
@@ -49,7 +51,7 @@ public class MignonClient {
             clientSocket = new Socket(serverHost, port);
             clientSocket.isBound();
             output = clientSocket.getOutputStream();
-            input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            input = clientSocket.getInputStream();
         } catch (UnknownHostException e) {
             success = false;
             logger.error("Don't know about host " + serverHost);
@@ -58,8 +60,11 @@ public class MignonClient {
             success = false;
             logger.error("Couldn't get I/O for the connection to " +
                     serverHost + " and open connection");
-            errors.put("clientExecution", "Couldn't get I/O for the connection to " +
-                    serverHost + " and open connection");
+
+            // See comment to the next function
+
+//            errors.put("clientExecution", "Couldn't get I/O for the connection to " +
+//                    serverHost + " and open connection");
         } finally {
             return success;
         }
@@ -69,19 +74,34 @@ public class MignonClient {
      * Sends command, which must be in byte form, to server by opened connection
      *
      * @param byteCommand byte view of command which must be sent
-     * @return success flag of performing operation
+     * @return response object with success flag and answer or error String
      */
-    public boolean sendCommand(byte[] byteCommand) {
-        boolean success = true;
+    public ResponseDTO sendCommand(byte[] byteCommand) {
+        ResponseDTO result = new ResponseDTO(false, "Unknown problem");
+        byte[] header = new byte[ResponseTransformerService.HEADER_LENGTH];
+        byte[] data = new byte[0];
+        int dataLength = 0;
         try {
             long start = System.nanoTime();
             output.write(byteCommand);
             output.flush();
-            logger.info(input.readLine());
+
+            input.read(header, 0, header.length);
+            dataLength = transformer.getDataPartSize(header);
+            if (dataLength > 0) {
+                data = new byte[dataLength];
+                input.read(data, 0, dataLength);
+            }
+            result = transformer.fromBytes(header, data, errors);
+            if (result == null) {
+                result.setSuccess(false);
+                result.setAnswer("Maybe, package is corrupted");
+            }
+            logger.info(result.getAnswer());
             long end = System.nanoTime();
             logger.info("Sending command had taken " + (end - start) + " nanosec.");
         } catch (IOException e) {
-            success = false;
+            result.setSuccess(false);
             logger.error("Couldn't get I/O for the connection to " +
                     serverHost + " and send command");
 
@@ -95,12 +115,12 @@ public class MignonClient {
                 Thread.sleep(1000);
                 logger.info("Trying to reconnect to " + serverHost);
                 if (openConnection()) {
-                    success = true;
+                    result = sendCommand(byteCommand);
                     break;
                 }
             }
         } finally {
-            return success;
+            return result;
         }
     }
 

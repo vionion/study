@@ -2,6 +2,8 @@ package com.tsybulko.random;
 
 import org.apache.log4j.Logger;
 
+import java.util.Random;
+
 /**
  * @author Vitalii Tsybulko
  * @version 1.0
@@ -10,6 +12,7 @@ import org.apache.log4j.Logger;
 public class KeyGenerator {
 
     private static final int DIVERSITY = 100000;
+    private static final Random rand = new Random();
     private static Logger logger = Logger.getLogger(KeyGenerator.class);
 
     private static final KeyGenerator INSTANCE = new KeyGenerator();
@@ -22,6 +25,6 @@ public class KeyGenerator {
     }
 
     public String generateKey() {
-        return "key" + (int) (Math.random() * DIVERSITY);
+        return "key" + rand.nextInt(DIVERSITY);
     }
 }

@@ -2,12 +2,12 @@ package com.tsybulko.integration;
 
 import com.tsybulko.client.HegemonicClient;
 import com.tsybulko.client.multithreading.ClientAggregator;
-import com.tsybulko.server.HashMapServer;
+import com.tsybulko.integration.runnable.utils.RunnableClient;
+import com.tsybulko.integration.runnable.utils.RunnableServer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 import static org.junit.Assert.assertTrue;
@@ -72,17 +72,17 @@ public class CommunicationIT {
 
     @Test
     public void testClientFalls() throws Exception {
-        RunnableClient clientRunnable = new RunnableClient();
+        RunnableClient clientRunnable = new RunnableClient(PORT);
         Thread clientThread = new Thread(clientRunnable);
         clientThread.start();
         Thread.sleep(10000);
         clientThread.interrupt();
-        assertTrue(clientRunnable.getErrors().isEmpty());
+        assertTrue(hashMapServer.getErrors().isEmpty());
     }
 
     @Test
     public void testServerFalls() throws Exception {
-        RunnableClient clientRunnable = new RunnableClient();
+        RunnableClient clientRunnable = new RunnableClient(PORT);
         Thread clientThread = new Thread(clientRunnable);
         clientThread.start();
         Thread.sleep(5000);
@@ -97,7 +97,7 @@ public class CommunicationIT {
         hashMapServer.shutDown();
     }
 
-    private static void runServer(RunnableServer server) throws Exception {
+    public static void runServer(RunnableServer server) throws Exception {
         Thread strangeServerThread = new Thread(server);
         strangeServerThread.start();
         while (!server.isRunning()) {
@@ -105,46 +105,4 @@ public class CommunicationIT {
         }
     }
 
-    private static class RunnableServer implements Runnable {
-        private HashMapServer server = new HashMapServer();
-        private String port;
-
-        public RunnableServer(String port) {
-            this.port = port;
-        }
-
-        public void run() {
-            try {
-                server.turnOn();
-                server.run(new String[]{"-port", port});
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        public boolean isRunning() {
-            return server.isRunning();
-        }
-
-        public void shutDown() {
-            server.turnOff();
-        }
-    }
-
-    private static class RunnableClient implements Runnable {
-        private ClientAggregator client = new ClientAggregator();
-        private HashMap<String, String> errorsClient;
-
-        public void run() {
-            try {
-                errorsClient = client.run(new String[]{"-serverHost", "localhost", "-serverPort", PORT, "clearAll"});
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        public HashMap<String, String> getErrors() {
-            return errorsClient;
-        }
-    }
 }

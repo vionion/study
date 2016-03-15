@@ -26,10 +26,4 @@ public class ServerArgsValidator extends ArgsValidator {
         return errors;
     }
 
-    protected static void printErrorMessage(HashMap<String, String> errors) {
-        logger.error("Usage: java -jar cache-server.jar <-port PORT> [-logfile filename.log]");
-        errors.put("usage", "Usage: java -jar cache-server.jar <-port PORT> [-logfile filename.log]");
-        ArgsValidator.printErrorMessage(errors);
-    }
-
 }

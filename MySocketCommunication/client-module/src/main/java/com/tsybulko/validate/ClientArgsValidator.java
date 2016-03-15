@@ -37,10 +37,4 @@ public class ClientArgsValidator extends ArgsValidator {
         return errors;
     }
 
-    protected static void printErrorMessage(HashMap<String, String> errors) {
-        logger.error("Usage: java -jar cache-client.jar <-serverHost HOST> <-serverPort PORT> <put KEY VALUE | get KEY | clearAll> [-logfile filename.log]");
-        errors.put("usage", "Usage: java -jar cache-client.jar <-serverHost HOST> <-serverPort PORT> <put KEY VALUE | get KEY | clearAll> [-logfile filename.log]");
-        ArgsValidator.printErrorMessage(errors);
-    }
-
 }
